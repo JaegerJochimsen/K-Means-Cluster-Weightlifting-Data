@@ -10,14 +10,10 @@ muscle growth to determine optimal caloric and macro intake for training purpose
 import math
 import random
 import turtle
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-# TODO
-# get K (number of clusters)
-# randomly choose k data points to serve as initial centroids
-# repeat the following:
-#   assign each data point to a cluster corresponding to the centroid it is closest to
-#   recompute the centroids for each of the k clusters
-# show clusters
 
 
 def beautify_data(fp):
@@ -65,6 +61,7 @@ def nd_dist(point0, point1):
 
     return math.sqrt(total)
 
+
 def build_point_list(data_dict):
     """
     Takes a data dictionary (split up by category) and turns it into a list of tuples where each tuple represents a data point.
@@ -102,7 +99,7 @@ def centroids(points):
 
         current_coord /= num_points
         centroid.append(current_coord)
-    return tuple(centroid)
+    return np.array(centroid)
 
 
 def pick_initial_centroids(k, points):
@@ -120,16 +117,33 @@ def pick_initial_centroids(k, points):
     num_points = len(points)
 
     while centroid_count < k:
+        # here we pick centroids randomly, maybe choose them strategically?
         index = random.randint(0, num_points - 1)
+
         if index not in centroid_ids:
             centroid_list.append(points[index])
             centroid_ids.append(index)
             centroid_count += 1
-    return centroid_list
+
+    return np.array(centroid_list)
 
 
-def create_clusters(k, centroids, data_points, iterations):
+def create_clusters(k, centrds, data_points, iterations):
+    """
+    A function that creates the actual clusters for the data. It does this by calculating the distance between each point and each of the initial centroids (each
+    of which correspond to a cluster), and then assigns each point to the cluster which it is closest to. The distance is calculated using a Euclidean distance
+    function which calculates distance in n-dimensions (where n is the total dimensions of each point). After each iteration a new centroid for each cluster is calculated
+    which will serve as the next iteration's initial centroid.
+    
+    :param: k : the number of clusters to be produced
+    :param: centrds : the initial centroids for the clustering
+    :param: data_points : a list of tuples which each represent a different data point
+    :param: iterations : the number of iterations that the clustering will run before all the points are considered "settled"
+    
+    :return: clusters : a list of integers representing the indexes of the points in data_points that are in each cluster 
+    """
     num_points = len(data_points)
+    dimensions = len(data_points[0])
     clusters = None
 
     for i in range(iterations):
@@ -144,7 +158,7 @@ def create_clusters(k, centroids, data_points, iterations):
             # for each cluster
             for clusterID in range(k):
                 # add the distance between ith data point and centroid, do this for each centroid
-                distances.append(nd_dist(data_points[points_id], centroids[clusterID]))
+                distances.append(nd_dist(data_points[points_id], centrds[clusterID]))
 
             # find the centroid the point is "closest" to
             min_dist = min(distances)
@@ -153,14 +167,13 @@ def create_clusters(k, centroids, data_points, iterations):
             # add that point to the appropriate cluster
             clusters[min_id].append(points_id)
 
-        dimensions = len(data_points[0])
         for clusterID in range(k):
             sums = [0]*dimensions
 
             # for each point in a the current cluster
             for points_id in clusters[clusterID]:
                 # grab current data point from all of them
-                data_pt= data_points[points_id]
+                data_pt = data_points[points_id]
 
                 # for each value in each dimension, add it to the corresponding index of sum (will be used to find
                 # new centroid
@@ -173,55 +186,61 @@ def create_clusters(k, centroids, data_points, iterations):
                     sums[ind] /= cluster_len
 
             # add new centroids
-            centroids[clusterID] = sums
-
-        for c in clusters:
-            print("CLUSTER")
-            for ind in range(num_points):
-                print(data_points[ind], end= " ")
-            print()
+            centrds[clusterID] = sums
 
     return clusters
 
 
-def visualize_clusters(k, clusters, data_points, threshold=None):
+def visualize_clusters(clusters, data_points, categories):
     """
-    A function which handles the visualization portion of the cluster analysis.
+    A function which handles the visualization portion of the cluster analysis. Uses matplotlib and numpy to handle 3D graphing. Here it has been used
+    to graph clusters determined based on Calories, Protein intake, and Work Fraction (i.e. = actual/expected work). The graph rotates to give a good 
+    perspective on the clusters.
+    
+    :param: clusters : list of lists of integers which represent indexes of points in each cluster (the indexes refer to points in data_points)
+    :param: data_points : a list of tuples which each represent one of the data points
+    :param: categories : a tuple of strings which are the categories of the coordinates being plotted (i.e. position 0 = x label, 1 = y label, 2 = z label)
+    
+    :return: None
     """
-    T = turtle.Turtle()
-    window = turtle.Screen()
-    # window.bgpic("graph.png")
-    window.screensize(448, 266)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlabel(f'{categories[0]}')
+    ax.set_ylabel(f'{categories[1]}')
+    ax.set_zlabel(f'{categories[2]}')
+  
+    # color identifiers for clusters -- supports up to 5 clusters now
+    colors = ["red", 'blue', 'green', 'orange', 'yellow']
+    c_id = 0
+    
+    # for each cluster
+    for cluster in clusters:
+        xs = np.array([])
+        ys = np.array([])
+        zs = np.array([])
+        
+        # determine the collective xs, ys, and zs for the points in each cluster
+        for point_id in cluster:
+            xs = np.append(xs, np.double(data_points[point_id][0]))
+            ys = np.append(ys, np.double(data_points[point_id][1]))
+            zs = np.append(zs, np.double(data_points[point_id][2]))
+            
+        # graph the points for the cluster
+        ax.scatter(xs, ys, zs, c=f'{colors[c_id]}')
+        c_id += 1
+        
+    # the 3D rotation of the graph 
+    for angle in range(0, 360):
+        ax.view_init(30, angle)
+        plt.draw()
+        plt.pause(.001)
 
-    w_factor = 1/10
-    h_factor = 100
-
-    T.hideturtle()
-    T.up()
-
-    colors = ["red", "blue", "green", "cyan", "orange", "yellow"]
-    write_heigh_factor = 1
-    # for each cluster we will look at each point
-    for cluster_id in range(k):
-        T.color(colors[cluster_id])
-        for ind in clusters[cluster_id]:
-            # isolate the desired data here, in this case calories and work fraction
-            cal = data_points[ind][0]
-            pro = data_points[ind][1]
-            wrk = data_points[ind][2]
-            T.goto(cal*w_factor, wrk*h_factor)
-            T.dot()
-            T.down()
-            T.goto(T.xcor(), T.ycor() + 50 + write_heigh_factor)
-            T.write(f'cal: {cal} - work: {wrk}')
-            T.up()
-            write_heigh_factor += 10
-        write_heigh_factor += 20
-    window.exitonclick()
 
 def main():
-    # omit vals between here, to normal
-    threshold = (0.99, 1.01)
+    """
+    Main program driver for this example. Focuses on clustering based off of Calorie intake (Cal), Protein intake (g), and Work Fraction (actual work / expected work).
+    Reads data from bulkData.csv.
+    """
     cal_pro_wrk = {}
     file = "bulkData.csv"
     with open(file, 'r') as f:
@@ -232,23 +251,16 @@ def main():
         points = build_point_list(cal_pro_wrk)
         c = pick_initial_centroids(3, points)
         clusters = create_clusters(3, c, points, 2)
-        visualize_clusters(3, clusters, points, threshold)
+        visualize_clusters(clusters, points, ["Calories (Cal)", "PRO (g)", "Work Fraction"])
+       
+        # a handy print statement to view raw clusters
+        # print(clusters)
+        # for cluster in clusters:
+        #     for point in cluster:
+        #         print(points[point], end = " ")
+        #     print('|')
 
 
 
-
-
-
-
-
-
-
-
-
-
-# if __name__ == "__main__":
-#     main()
-
-main()
 
 
