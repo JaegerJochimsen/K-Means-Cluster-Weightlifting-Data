@@ -1,7 +1,6 @@
 """
 Author: Jaeger Jochimsen
 Resources: Python Programming in Context 2ed by Miller and Ranum pg.242-
-
 Goal: to implement a k-means cluster analysis algorithm with the intent of analyzing
 data sets of a generic size and content. In particular, to run cluster.py on a data set
 containing the calories, macros, and quantitative performance data from a period of induced
@@ -15,11 +14,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-
 def beautify_data(fp):
     """
     A function that places all the data from the csv into a dictionary which has categories as keys.
-
     :param: fp is a file pointer to the .csv file to be analyzed
     :return: a dictionary containing keys=categories of data and values=data values from .csv
     """
@@ -51,7 +48,6 @@ def beautify_data(fp):
 def nd_dist(point0, point1):
     """
     A function that finds the Euclidean distance between two n-dimensional points. The points must be the same length.
-
     :param: point0 and point1 : 2 n-dimensional points given at tuples of values. The two points must be equal in length.
     :return: the Euclidean distance between the points as a float.
     """
@@ -65,7 +61,6 @@ def nd_dist(point0, point1):
 def build_point_list(data_dict):
     """
     Takes a data dictionary (split up by category) and turns it into a list of tuples where each tuple represents a data point.
-
     :param: data_dict : a dict of data values corresponding to categories which are the dict's keys.
     :return: a list of tuples representing a list of data points from the .csv file
     """
@@ -83,7 +78,6 @@ def build_point_list(data_dict):
 def centroids(points):
     """
     A function that takes a list of tuples (i.e. points) and then finds the mean for each dimension.
-
     :param: points : a list of points that are all n-dimensional. These points are represented as tuples
     :return: centroid as a tuple
     """
@@ -105,10 +99,8 @@ def centroids(points):
 def pick_initial_centroids(k, points):
     """
     A function which randomly picks the initial centroids for the clustering.
-
     :param: k : the number of centroids to be picked initially
     :param: points : a list of points represented as tuples
-
     :return: a list of centroids which are points represented as tuples
     """
     centroid_count = 0
@@ -130,17 +122,18 @@ def pick_initial_centroids(k, points):
 
 def create_clusters(k, centrds, data_points, iterations):
     """
-    A function that creates the actual clusters for the data. It does this by calculating the distance between each point and each of the initial centroids (each
-    of which correspond to a cluster), and then assigns each point to the cluster which it is closest to. The distance is calculated using a Euclidean distance
-    function which calculates distance in n-dimensions (where n is the total dimensions of each point). After each iteration a new centroid for each cluster is calculated
-    which will serve as the next iteration's initial centroid.
-    
+    A function that creates the actual clusters for the data. It does this by calculating the distance between each point
+    and each of the initial centroids (each of which correspond to a cluster), and then assigns each point to the cluster
+    which it is closest to. The distance is calculated using a Euclidean distance function which calculates distance in
+    n-dimensions (where n is the total dimensions of each point). After each iteration a new centroid for each cluster
+    is calculated which will serve as the next iteration's initial centroid.
+
     :param: k : the number of clusters to be produced
     :param: centrds : the initial centroids for the clustering
     :param: data_points : a list of tuples which each represent a different data point
     :param: iterations : the number of iterations that the clustering will run before all the points are considered "settled"
-    
-    :return: clusters : a list of integers representing the indexes of the points in data_points that are in each cluster 
+
+    :return: clusters : a list of integers representing the indexes of the points in data_points that are in each cluster
     """
     num_points = len(data_points)
     dimensions = len(data_points[0])
@@ -193,14 +186,17 @@ def create_clusters(k, centrds, data_points, iterations):
 
 def visualize_clusters(clusters, data_points, categories):
     """
-    A function which handles the visualization portion of the cluster analysis. Uses matplotlib and numpy to handle 3D graphing. Here it has been used
-    to graph clusters determined based on Calories, Protein intake, and Work Fraction (i.e. = actual/expected work). The graph rotates to give a good 
-    perspective on the clusters.
-    
-    :param: clusters : list of lists of integers which represent indexes of points in each cluster (the indexes refer to points in data_points)
-    :param: data_points : a list of tuples which each represent one of the data points
-    :param: categories : a tuple of strings which are the categories of the coordinates being plotted (i.e. position 0 = x label, 1 = y label, 2 = z label)
-    
+    A function which handles the visualization portion of the cluster analysis. Uses matplotlib and numpy to handle 3D
+    graphing. Here it has been used to graph clusters determined based on Calories, Protein intake, and Work Fraction
+    (i.e. = actual/expected work). The graph rotates to give a good perspective on the clusters.
+
+    :param: clusters : list of lists of integers which represent indexes of points in each cluster (the indexes refer to
+                       points in data_points)
+    :param: data_points : a list of tuples which each represent one of the data points; for this function it is assumed
+                          that the data points have exactly 3 dimensions.
+    :param: categories : a tuple of strings which are the categories of the coordinates being plotted
+                         (i.e. position 0 = x label, 1 = y label, 2 = z label)
+
     :return: None
     """
     fig = plt.figure()
@@ -208,59 +204,29 @@ def visualize_clusters(clusters, data_points, categories):
     ax.set_xlabel(f'{categories[0]}')
     ax.set_ylabel(f'{categories[1]}')
     ax.set_zlabel(f'{categories[2]}')
-  
+
     # color identifiers for clusters -- supports up to 5 clusters now
     colors = ["red", 'blue', 'green', 'orange', 'yellow']
     c_id = 0
-    
+
     # for each cluster
     for cluster in clusters:
         xs = np.array([])
         ys = np.array([])
         zs = np.array([])
-        
+
         # determine the collective xs, ys, and zs for the points in each cluster
         for point_id in cluster:
             xs = np.append(xs, np.double(data_points[point_id][0]))
             ys = np.append(ys, np.double(data_points[point_id][1]))
             zs = np.append(zs, np.double(data_points[point_id][2]))
-            
+
         # graph the points for the cluster
         ax.scatter(xs, ys, zs, c=f'{colors[c_id]}')
         c_id += 1
-        
-    # the 3D rotation of the graph 
+
+    # the 3D rotation of the graph
     for angle in range(0, 360):
         ax.view_init(30, angle)
         plt.draw()
         plt.pause(.001)
-
-
-def main():
-    """
-    Main program driver for this example. Focuses on clustering based off of Calorie intake (Cal), Protein intake (g), and Work Fraction (actual work / expected work).
-    Reads data from bulkData.csv.
-    """
-    cal_pro_wrk = {}
-    file = "bulkData.csv"
-    with open(file, 'r') as f:
-        data = beautify_data(f)
-        cal_pro_wrk["Calories"] = data["Calories"]
-        cal_pro_wrk["PRO (g)"] = data["PRO (g)"]
-        cal_pro_wrk["Work Fraction"] = data["Work Fraction"]
-        points = build_point_list(cal_pro_wrk)
-        c = pick_initial_centroids(3, points)
-        clusters = create_clusters(3, c, points, 2)
-        visualize_clusters(clusters, points, ["Calories (Cal)", "PRO (g)", "Work Fraction"])
-       
-        # a handy print statement to view raw clusters
-        # print(clusters)
-        # for cluster in clusters:
-        #     for point in cluster:
-        #         print(points[point], end = " ")
-        #     print('|')
-
-
-
-
-
