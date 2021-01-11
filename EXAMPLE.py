@@ -12,7 +12,7 @@ import turtle
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
+%matplotlib notebook
 
 def csv_to_dict(fp):
     """
@@ -236,7 +236,6 @@ def visualize_clusters(c, clusters, data_points, categories, sphere=False):
         sphere_x = c[c_id][0] + mx * np.cos(u) * np.sin(v)
         sphere_y = c[c_id][1] + mx * np.sin(u) * np.sin(v)
         sphere_z = c[c_id][2] + mx * np.cos(v)
-        print(sphere_x)
 
         # graph the points for the cluster
         ax.scatter(xs, ys, zs, c=f'{colors[c_id]}')
@@ -288,6 +287,6 @@ def main():
     points = build_point_list(cal_pro_wrk)
     c = pick_initial_centroids(5, points)
     cent, clusters = create_clusters(5, c, points, 3)
-    visualize_clusters(cent, clusters, points, ["Calories (Cal)", "PRO (g)", "Work Fraction"], show=True)
-
+    visualize_clusters(cent, clusters, points, ["Calories (Cal)", "PRO (g)", "Work Fraction"], sphere=True)
+    visualize_clusters(cent, clusters, points, ["Calories (Cal)", "PRO (g)", "Work Fraction"])
 main()
