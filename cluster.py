@@ -237,7 +237,6 @@ def visualize_clusters(c, clusters, data_points, categories, sphere=False):
         sphere_x = c[c_id][0] + mx * np.cos(u) * np.sin(v)
         sphere_y = c[c_id][1] + mx * np.sin(u) * np.sin(v)
         sphere_z = c[c_id][2] + mx * np.cos(v)
-        print(sphere_x)
 
         # graph the points for the cluster
         ax.scatter(xs, ys, zs, c=f'{colors[c_id]}')
