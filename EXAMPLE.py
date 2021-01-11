@@ -12,7 +12,6 @@ import turtle
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-%matplotlib notebook
 
 
 def csv_to_dict(fp):
@@ -182,14 +181,18 @@ def create_clusters(k, centrds, data_points, iterations):
             # add new centroids
             centrds[clusterID] = sums
 
-    return clusters
+    return centrds, clusters
 
 
-def visualize_clusters(clusters, data_points, categories):
+def visualize_clusters(c, clusters, data_points, categories, sphere=False):
     """
     A function which handles the visualization portion of the cluster analysis. Uses matplotlib and numpy to handle 3D
     graphing. Here it has been used to graph clusters determined based on Calories, Protein intake, and Work Fraction
-    (i.e. = actual/expected work). The graph rotates to give a good perspective on the clusters.
+    (i.e. = actual/expected work). The graph rotates to give a good perspective on the clusters. If show=True then also
+    plot wireframe spheres centered at the centroids of each cluster with a radius that is the distance from the centroid
+    to the furthest point.
+
+    Credit for wireframe sphere: https://stackoverflow.com/questions/40460960/how-to-plot-a-sphere-when-we-are-given-a-central-point-and-a-radius-size
 
     :param: clusters : list of lists of integers which represent indexes of points in each cluster (the indexes refer to
                        points in data_points)
@@ -197,11 +200,12 @@ def visualize_clusters(clusters, data_points, categories):
                           that the data points have exactly 3 dimensions.
     :param: categories : a tuple of strings which are the categories of the coordinates being plotted
                          (i.e. position 0 = x label, 1 = y label, 2 = z label)
-
+    :param: sphere : a boolean val about whether to show spheres around clusters
     :return: None
     """
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    # ax = fig.add_subplot(111, projection='3d')
+    ax = fig.gca(projection='3d')
     ax.set_xlabel(f'{categories[0]}')
     ax.set_ylabel(f'{categories[1]}')
     ax.set_zlabel(f'{categories[2]}')
@@ -215,15 +219,36 @@ def visualize_clusters(clusters, data_points, categories):
         xs = np.array([])
         ys = np.array([])
         zs = np.array([])
-
+        mx = 0
         # determine the collective xs, ys, and zs for the points in each cluster
         for point_id in cluster:
             xs = np.append(xs, np.double(data_points[point_id][0]))
             ys = np.append(ys, np.double(data_points[point_id][1]))
             zs = np.append(zs, np.double(data_points[point_id][2]))
 
+            # calc dist from each cluster centroid to each point, find the max (furthest point from centroid)
+            dist = nd_dist(c[c_id], data_points[point_id])
+            if dist > mx:
+                mx = dist
+
+        # find sphere outline for wireframe
+        u, v = np.mgrid[0:2*np.pi:12*1j, 0:np.pi:20*1j]
+        sphere_x = c[c_id][0] + mx * np.cos(u) * np.sin(v)
+        sphere_y = c[c_id][1] + mx * np.sin(u) * np.sin(v)
+        sphere_z = c[c_id][2] + mx * np.cos(v)
+        print(sphere_x)
+
         # graph the points for the cluster
         ax.scatter(xs, ys, zs, c=f'{colors[c_id]}')
+
+        # plot wire spheres around data clusters
+        if sphere:
+            ax.plot_wireframe(sphere_x, sphere_y, sphere_z, color=f'{colors[c_id]}')
+
+
+        # graph the points for the cluster
+        ax.scatter(xs, ys, zs, c=f'{colors[c_id]}')
+
         c_id += 1
 
     # the 3D rotation of the graph
@@ -255,12 +280,14 @@ data = {'Calories': ['2489', '1580', '2464', '3482', '2853', '3669', '2940', '26
                           '1.1389', '1.1250', '1.0200', '1.0000', '0.7804', '0.7500', '0.7095', '1.0142', '1.0190',
                           '1.0904', '0.8491', '0.9574', '1.0000', '1.0904', '0.9429', '0.7075', '0.9583', '0.7075']}
 
+def main():
+    cal_pro_wrk = {}
+    cal_pro_wrk["Calories"] = data["Calories"]
+    cal_pro_wrk["PRO (g)"] = data["PRO (g)"]
+    cal_pro_wrk["Work Fraction"] = data["Work Fraction"]
+    points = build_point_list(cal_pro_wrk)
+    c = pick_initial_centroids(5, points)
+    cent, clusters = create_clusters(5, c, points, 3)
+    visualize_clusters(cent, clusters, points, ["Calories (Cal)", "PRO (g)", "Work Fraction"], show=True)
 
-cal_pro_wrk = {}
-cal_pro_wrk["Calories"] = data["Calories"]
-cal_pro_wrk["PRO (g)"] = data["PRO (g)"]
-cal_pro_wrk["Work Fraction"] = data["Work Fraction"]
-points = build_point_list(cal_pro_wrk)
-c = pick_initial_centroids(5, points)
-clusters = create_clusters(5, c, points, 3)
-visualize_clusters(clusters, points, ["Calories (Cal)", "PRO (g)", "Work Fraction"])
+main()
