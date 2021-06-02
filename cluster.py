@@ -21,7 +21,6 @@ def beautify_data(fp):
     :return: a dictionary containing keys=categories of data and values=data values from .csv
     """
     categories = []
-    data = {}
     initial = True
     for line in fp:
         # split on all commas
@@ -29,9 +28,7 @@ def beautify_data(fp):
 
         # if it is the first line initialize
         if initial:
-            categories = current
-            for cat in categories:
-                data[cat] = []
+            data = {cat:[] for cat in current}
             initial = False
 
         else:
@@ -204,6 +201,7 @@ def visualize_clusters(c, clusters, data_points, categories, sphere=False):
     :param: sphere : a boolean that determines whether or not to display wireframe spheres around the clusters (centered at each cluster's centroid)
     :return: None
     """
+    
     fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
     ax = fig.gca(projection='3d')
@@ -256,3 +254,4 @@ def visualize_clusters(c, clusters, data_points, categories, sphere=False):
         ax.view_init(30, angle)
         plt.draw()
         plt.pause(.001)
+"""
