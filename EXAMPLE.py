@@ -1,6 +1,5 @@
 """
 Author: Jaeger Jochimsen
-
 An interactive example of the code and its use, designed to be run in jupyter notebook or another web-based interpreter.
 The allows individuals without Python installed locally to test the functionality of the program without needing to
 download anything.
@@ -29,9 +28,7 @@ def csv_to_dict(fp):
 
         # if it is the first line initialize
         if initial:
-            categories = current
-            for cat in categories:
-                data[cat] = []
+            data = {cat:[] for cat in current}
             initial = False
 
         else:
@@ -41,7 +38,7 @@ def csv_to_dict(fp):
     # get rid of noise from newline category
     if "" in data.keys():
         del data['']
-
+    
     return data
 
 
@@ -53,7 +50,7 @@ def nd_dist(point0, point1):
     """
     total = 0
     for i in range(len(point0)):
-        total += (point1[i] - point0[i])**2
+        total += (point1[i] - point0[i])*(point1[i] - point0[i])
 
     return math.sqrt(total)
 
@@ -64,13 +61,9 @@ def build_point_list(data_dict):
     :param: data_dict : a dict of data values corresponding to categories which are the dict's keys.
     :return: a list of tuples representing a list of data points from the .csv file
     """
-    points = []
+
     keys = list(data_dict.keys())
-    for i in range(len(data_dict[keys[0]])):
-        point = []
-        for key in keys:
-            point.append(float(data_dict[key][i]))
-        points.append(tuple(point))
+    points = [[float(data_dict[key][i]) for key in keys] for i in range(len(data_dict[keys[0]]))]
 
     return points
 
@@ -127,12 +120,10 @@ def create_clusters(k, centrds, data_points, iterations):
     which it is closest to. The distance is calculated using a Euclidean distance function which calculates distance in
     n-dimensions (where n is the total dimensions of each point). After each iteration a new centroid for each cluster is calculated
     which will serve as the next iteration's initial centroid.
-
     :param: k : the number of clusters to be produced
     :param: centrds : the initial centroids for the clustering
     :param: data_points : a list of tuples which each represent a different data point
     :param: iterations : the number of iterations that the clustering will run before all the points are considered "settled"
-
     :return: clusters : a list of integers representing the indexes of the points in data_points that are in each cluster
     """
     num_points = len(data_points)
@@ -141,17 +132,12 @@ def create_clusters(k, centrds, data_points, iterations):
 
     for i in range(iterations):
         print("*****PASS: ", i, " *****")
-        clusters = []
-        # initialize clusters
-        for j in range(k):
-            clusters.append([])
+        
+        clusters = [[] for _ in range(k)]
 
         for points_id in range(num_points):
-            distances = []
-            # for each cluster
-            for clusterID in range(k):
-                # add the distance between ith data point and centroid, do this for each centroid
-                distances.append(nd_dist(data_points[points_id], centrds[clusterID]))
+            # add the distance between ith data point and centroid, do this for each centroid
+            distances = [nd_dist(data_points[points_id], centrds[clusterID]) for clusterID in range(k)]
 
             # find the centroid the point is "closest" to
             min_dist = min(distances)
@@ -191,9 +177,7 @@ def visualize_clusters(c, clusters, data_points, categories, sphere=False):
     (i.e. = actual/expected work). The graph rotates to give a good perspective on the clusters. If show=True then also
     plot wireframe spheres centered at the centroids of each cluster with a radius that is the distance from the centroid
     to the furthest point.
-
     Credit for wireframe sphere: https://stackoverflow.com/questions/40460960/how-to-plot-a-sphere-when-we-are-given-a-central-point-and-a-radius-size
-
     :param: clusters : list of lists of integers which represent indexes of points in each cluster (the indexes refer to
                        points in data_points)
     :param: data_points : a list of tuples which each represent one of the data points; for this function it is assumed
@@ -243,7 +227,6 @@ def visualize_clusters(c, clusters, data_points, categories, sphere=False):
         # plot wire spheres around data clusters
         if sphere:
             ax.plot_wireframe(sphere_x, sphere_y, sphere_z, color=f'{colors[c_id]}')
-
 
         # graph the points for the cluster
         ax.scatter(xs, ys, zs, c=f'{colors[c_id]}')

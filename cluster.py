@@ -50,10 +50,9 @@ def nd_dist(point0, point1):
     """
     total = 0
     for i in range(len(point0)):
-        total += (point1[i] - point0[i])**2
+        total += (point1[i] - point0[i])*(point1[i] - point0[i])
 
     return math.sqrt(total)
-
 
 def build_point_list(data_dict):
     """
@@ -61,13 +60,9 @@ def build_point_list(data_dict):
     :param: data_dict : a dict of data values corresponding to categories which are the dict's keys.
     :return: a list of tuples representing a list of data points from the .csv file
     """
-    points = []
+
     keys = list(data_dict.keys())
-    for i in range(len(data_dict[keys[0]])):
-        point = []
-        for key in keys:
-            point.append(float(data_dict[key][i]))
-        points.append(tuple(point))
+    points = [[float(data_dict[key][i]) for key in keys] for i in range(len(data_dict[keys[0]]))]
 
     return points
 
@@ -117,21 +112,19 @@ def pick_initial_centroids(k, points):
     return np.array(centroid_list)
 
 
+
 def create_clusters(k, centrds, data_points, iterations):
     """
     A function that creates the actual clusters for the data. It does this by calculating the distance between each point
     and each of the initial centroids (each of which correspond to a cluster), and then assigns each point to the cluster
     which it is closest to. The distance is calculated using a Euclidean distance function which calculates distance in
-    n-dimensions (where n is the total dimensions of each point). After each iteration a new centroid for each cluster
-    is calculated which will serve as the next iteration's initial centroid.
-
+    n-dimensions (where n is the total dimensions of each point). After each iteration a new centroid for each cluster is calculated
+    which will serve as the next iteration's initial centroid.
     :param: k : the number of clusters to be produced
     :param: centrds : the initial centroids for the clustering
     :param: data_points : a list of tuples which each represent a different data point
     :param: iterations : the number of iterations that the clustering will run before all the points are considered "settled"
-
     :return: clusters : a list of integers representing the indexes of the points in data_points that are in each cluster
-    :return: centrds : a list of centroids corresponding to each of the clusters
     """
     num_points = len(data_points)
     dimensions = len(data_points[0])
@@ -139,17 +132,12 @@ def create_clusters(k, centrds, data_points, iterations):
 
     for i in range(iterations):
         print("*****PASS: ", i, " *****")
-        clusters = []
-        # initialize clusters
-        for j in range(k):
-            clusters.append([])
+        
+        clusters = [[] for _ in range(k)]
 
         for points_id in range(num_points):
-            distances = []
-            # for each cluster
-            for clusterID in range(k):
-                # add the distance between ith data point and centroid, do this for each centroid
-                distances.append(nd_dist(data_points[points_id], centrds[clusterID]))
+            # add the distance between ith data point and centroid, do this for each centroid
+            distances = [nd_dist(data_points[points_id], centrds[clusterID]) for clusterID in range(k)]
 
             # find the centroid the point is "closest" to
             min_dist = min(distances)
@@ -180,7 +168,6 @@ def create_clusters(k, centrds, data_points, iterations):
             centrds[clusterID] = sums
 
     return centrds, clusters
-
 
 def visualize_clusters(c, clusters, data_points, categories, sphere=False):
     """
@@ -254,4 +241,4 @@ def visualize_clusters(c, clusters, data_points, categories, sphere=False):
         ax.view_init(30, angle)
         plt.draw()
         plt.pause(.001)
-"""
+
